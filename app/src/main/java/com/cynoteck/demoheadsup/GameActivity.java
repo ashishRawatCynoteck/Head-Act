@@ -11,6 +11,7 @@ import android.os.CountDownTimer;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import java.util.ArrayList;
@@ -30,7 +31,7 @@ public class GameActivity extends FragmentActivity implements SensorEventListene
     MediaPlayer mpTimeOut;
     MediaPlayer mpTick;
     MediaPlayer mpStart;
-    View correctOverlay, passOverlay;
+    RelativeLayout correctOverlay, passOverlay;
     Random randomInt = new Random();
     float[] mGravity;
     float[] mGeomagnetic;
@@ -53,6 +54,7 @@ public class GameActivity extends FragmentActivity implements SensorEventListene
         soundInit();
         gameAndPauseTime();
         init();
+//        sensorRegister();
         firstCountDownStart();
 
     }
@@ -67,7 +69,7 @@ public class GameActivity extends FragmentActivity implements SensorEventListene
             @Override
             public void onTick(long millisUntilFinished) {
                 total = millisUntilFinished;
-                timerText.setText(millisUntilFinished / 1000 + " Seconds");
+                timerText.setText(millisUntilFinished / 1000 +"");
             }
 
             @Override
@@ -92,7 +94,7 @@ public class GameActivity extends FragmentActivity implements SensorEventListene
             @Override
             public void onTick(long millisUntilFinished) {
                 total = millisUntilFinished;
-                timerText.setText(millisUntilFinished / 1000 + " Seconds");
+                timerText.setText(millisUntilFinished / 1000 + "");
             }
 
             @Override
@@ -193,49 +195,67 @@ public class GameActivity extends FragmentActivity implements SensorEventListene
             float x = event.values[0];
             float y = event.values[1];
             float z = event.values[2];
-            Log.e("XXXXXXX", x+ "");
-            Log.e("YYYYYYY", y+ "");
-            Log.e("ZZZZZZZ", z+ "");
-            if ((z > 1) && (z < 9) && (x > 0 && x < 1) && (y > -3 && y < 3))
+
+
+            if ((z > 1) && (z < 9) && (x > 0 && x < 3) && (y > -3 && y < 3))
             {
-                Toast.makeText(this, "Upward", Toast.LENGTH_SHORT).show();
-                //mpRed.selectTrack(R.r);
+                mpRed.setVolume(0.5f, 0.5f);
+                mpRed.start();
                 skippedStrArr.add(textViewText.getText().toString());
                 passOverlay.setVisibility(View.VISIBLE);
-                mpRed.start();
+                if ((z > 1) && (z < 9) && (x > 0 && x < 9) && (y > -3 && y < 3)) {
+                    mSensorManager.unregisterListener(this);
+//                    Toast.makeText(this, "Upward", Toast.LENGTH_SHORT).show();
                 textViewText.postDelayed(new Runnable() {
                     @Override
                     public void run() {
+                        sensorRegister();
                         presentStr[0] = movie.get(randomInt.nextInt(movie.size()));
                         passOverlay.setVisibility(View.GONE);
                         textViewText.setText(presentStr[0]);
                         mpNew.start();
+
                     }
                 }, 1000);
-            } else if ((z > -9) && (z < 1) && (x > 0 && x < 1) && (y > -3 && y < 3)) {
-                Toast.makeText(this, "Downward", Toast.LENGTH_SHORT).show();
+                }
+
+
+            } else if ((z > -9) && (z < 1) && (x > 0 && x < 3) && (y > -3 && y < 3)) {
                 mpGreen.setVolume(0.5f, 0.5f);
                 mpGreen.start();
-                Collections.shuffle(movie);
-                presentStr[0] = movie.get(0).toString();
-                doneStrArr.add(presentStr[0]);
-                Log.e("done",presentStr[0]);
                 correctOverlay.setVisibility(View.VISIBLE);
-                movie.remove(0);
-                textViewText.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        correctOverlay.setVisibility(View.GONE);
-                        textViewText.setText(presentStr[0]);
-                        mpNew.start();
-                    }
-                }, 1000);
 
+//                    Toast.makeText(this, "Downward", Toast.LENGTH_SHORT).show();
+                    if ((z > -9) && (z < 1) && (x > 0 && x < 9) && (y > -3 && y < 3)) {
+//                        Toast.makeText(this, "Center", Toast.LENGTH_SHORT).show();
+                        mSensorManager.unregisterListener(this);
+                        Log.e("XXXXXXX", x+ "");
+                        Log.e("YYYYYYY", y+ "");
+                        Log.e("ZZZZZZZ", z+ "");
+                        Collections.shuffle(movie);
+                        presentStr[0] = movie.get(0).toString();
+                        doneStrArr.add(presentStr[0]);
+                        Log.e("done", presentStr[0]);
+                        movie.remove(0);
+                        textViewText.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                sensorRegister();
+                                correctOverlay.setVisibility(View.GONE);
+                                textViewText.setText(presentStr[0]);
+                                mpNew.start();
+                            }
+                        }, 1000);
+                    }
+
+
+                }
             }
 
-        }
 
         }
+
+
 
     private void startGame() {
         threeTwoOneText.setVisibility(View.GONE);

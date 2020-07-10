@@ -8,6 +8,7 @@
 
 
     <RelativeLayout
+        android:visibility="visible"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="center_vertical">
@@ -17,58 +18,98 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="30dp"
+            android:fontFamily="sans-serif-condensed-medium"
+            android:gravity="center"
+            android:text="Manikarnika: The Queen Of Jhansi"
+            android:textColor="#fff"
+            android:textSize="70sp"
+            android:textStyle="bold"
+            android:visibility="visible" />
+        <TextView
+            android:layout_marginTop="50dp"
+            android:layout_below="@id/textView"
+            android:id="@+id/timer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="cursive"
             android:gravity="center_horizontal"
-            android:text="TextView"
-            android:textSize="100dp"
-            android:textStyle="bold" />
+            android:textColor="#ffc44f"
+            android:textSize="70sp"
+            android:textStyle="bold"
+            tools:text="Timer" />
 
         <TextView
+
             android:id="@+id/promptText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
+            android:fontFamily="sans-serif-condensed-medium"
             android:gravity="center"
             android:text="Place phone on forehead."
-            android:textSize="40sp"
+            android:textColor="#fff"
+            android:textSize="100dp"
             android:textStyle="bold"
-            android:visibility="visible"
+            android:visibility="gone"
             tools:text="Place your phone on your forehead." />
 
         <TextView
+            android:gravity="center"
+            android:layout_below="@id/promptText"
             android:id="@+id/three_two_one_text"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:textStyle="bold"
-            android:gravity="center"
+            android:fontFamily="cursive"
             android:textColor="#91ff0004"
             android:textSize="100sp"
+            android:textStyle="bold"
             android:visibility="gone"
             tools:text="3" />
 
-        <TextView
-            android:id="@+id/timer"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="200dp"
-            android:gravity="center_horizontal"
-            android:textColor="#ffc44f"
-            android:textSize="40sp"
-            android:textStyle="bold"
-            tools:text="Timer" />
+
     </RelativeLayout>
 
-    <View
+    <RelativeLayout
         android:id="@+id/correctOverlay"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@drawable/correct"
-        android:visibility="gone" >
+        android:visibility="gone"
+        android:orientation="horizontal">
 
-    </View>
-    <View
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:fontFamily="sans-serif-condensed-medium"
+            android:gravity="center"
+            android:text="Correct!"
+            android:textColor="#ffff"
+            android:textSize="120sp"
+            android:textStyle="bold"
+            android:visibility="visible" />
+
+    </RelativeLayout>
+
+    <RelativeLayout
         android:id="@+id/passOverlay"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@drawable/pass"
-        android:visibility="gone" />
+        android:visibility="gone"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:fontFamily="sans-serif-condensed-medium"
+            android:gravity="center"
+            android:text="Pass!"
+            android:textColor="#fff"
+            android:textSize="120sp"
+            android:textStyle="bold"
+            android:visibility="visible" />
+
+    </RelativeLayout>
 </RelativeLayout>
