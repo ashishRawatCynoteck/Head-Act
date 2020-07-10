@@ -47,19 +47,36 @@ public class GameActivity extends FragmentActivity implements SensorEventListene
     TextView threeTwoOneText;
     private static long total;
 
-    CountDownTimer gamePauseTime = new CountDownTimer(total, 1000) {
-        @Override
-        public void onTick(long millisUntilFinished) {
-            total = millisUntilFinished;
-            timerText.setText(millisUntilFinished / 1000 + " Seconds");
-        }
+    CountDownTimer gamePauseTime;
+    CountDownTimer gameTime;
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+        this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        setContentView(R.layout.activity_game);
+        soundInit();
+        gameAndPauseTime();
+        init();
+        gameAndPauseTime();
+        firstCountDownStart();
 
-        @Override
-        public void onFinish() {
-            textViewText.setText("Time Over!");
-            textViewText.postDelayed(new Runnable() {
-                @Override
-                public void run() {
+    }
+
+    private void gameAndPauseTime() {
+        gamePauseTime = new CountDownTimer(total, 1000) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+                total = millisUntilFinished;
+                timerText.setText(millisUntilFinished / 1000 + " Seconds");
+            }
+
+            @Override
+            public void onFinish() {
+                textViewText.setText("Time Over!");
+                textViewText.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
 //                    resultIntent.putExtra("Skipped", skippedStrArr.size());
 //                    resultIntent.putExtra("Correct", doneStrArr.size());
 //                    resultIntent.putExtra("SkippedStrings", skippedStrArr.toArray());
@@ -68,72 +85,55 @@ public class GameActivity extends FragmentActivity implements SensorEventListene
 //                    mContext.startActivity(resultIntent);
 //                    skippedStrArr.clear();
 //                    doneStrArr.clear();
-                }
-            }, 1500);
-            timerText.setVisibility(View.GONE);
-        }
-    };
-    CountDownTimer gameTime = new CountDownTimer(30000, 1000) {
-        @Override
-        public void onTick(long millisUntilFinished) {
-            total = millisUntilFinished;
-            timerText.setText(millisUntilFinished / 1000 + " Seconds");
-        }
+                    }
+                }, 1500);
+                timerText.setVisibility(View.GONE);
+            }
+        };
 
-        @Override
-        public void onFinish() {
-            mSensorManager.unregisterListener(GameActivity.this);
-            textViewText.setText("Time Over!");
-            mpTimeOut.start();
-            textViewText.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    resultIntent.putExtra("SkippedArrSize", skippedStrArr.size());
-                    resultIntent.putExtra("CorrectArrSize", doneStrArr.size());
-                    resultIntent.putExtra("SkippedStrings", skippedStrArr.toArray());
-                    resultIntent.putExtra("CorrectStrings", doneStrArr);
-                    Log.e("CorrectStrings",doneStrArr.toString());
-                    Log.e("SkippedArrSize",skippedStrArr.toString());
 
-                    startActivity(resultIntent);
+        gameTime = new CountDownTimer(30000, 1000) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+                total = millisUntilFinished;
+                timerText.setText(millisUntilFinished / 1000 + " Seconds");
+            }
+
+            @Override
+            public void onFinish() {
+                mSensorManager.unregisterListener(GameActivity.this);
+                textViewText.setText("Time Over!");
+                mpTimeOut.start();
+                textViewText.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        resultIntent = new Intent(GameActivity.this, ResultActivity.class);
+                        resultIntent.putExtra("SkippedArrSize", skippedStrArr.size());
+                        resultIntent.putExtra("CorrectArrSize", doneStrArr.size());
+                        resultIntent.putExtra("SkippedStrings", skippedStrArr.toArray());
+                        resultIntent.putExtra("CorrectStrings", doneStrArr);
+                        Log.e("CorrectStrings",doneStrArr.toString());
+                        Log.e("SkippedArrSize",skippedStrArr.toString());
+
+                        startActivity(resultIntent);
 //                    skippedStrArr.clear();
 //                    doneStrArr.clear();
-                }
-            }, 1500);
-            timerText.setVisibility(View.GONE);
-        }
-    };
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
-        this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        setContentView(R.layout.activity_game);
-        mpGreen = MediaPlayer.create(this, R.raw.green);
-        mpRed = MediaPlayer.create(this, R.raw.red);
-        mpNew = MediaPlayer.create(this, R.raw.newname);
-        mpTimeOut = MediaPlayer.create(this, R.raw.timeout);
-        mpTick = MediaPlayer.create(this, R.raw.tick);
-        mpStart = MediaPlayer.create(this, R.raw.start);
-        mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        accelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        magnetometer = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
-        textViewText = findViewById(R.id.textView);
-        timerText = findViewById(R.id.timer);
-        threeTwoOneText = findViewById(R.id.three_two_one_text);
-        promptText = findViewById(R.id.promptText);
+                    }
+                }, 1500);
+                timerText.setVisibility(View.GONE);
+            }
+        };
+    }
+
+    private void firstCountDownStart() {
 
         movie.addAll(Arrays.asList(names));
-        textViewText =  findViewById(R.id.textView);
-        timerText = findViewById(R.id.timer);
-        resultIntent = new Intent(GameActivity.this, ResultActivity.class);
         Collections.shuffle(movie);
         presentStr = new String[]{movie.get(0)};
 
         Log.e("presentstr", String.valueOf(presentStr));
         movie.remove(0);
         textViewText.setText(presentStr[0]);
-        correctOverlay = findViewById(R.id.correctOverlay);
         passOverlay = findViewById(R.id.passOverlay);
         promptText.setVisibility(View.VISIBLE);
         textViewText.setVisibility(View.GONE);
@@ -168,6 +168,30 @@ public class GameActivity extends FragmentActivity implements SensorEventListene
                 startGame();
             }
         }, 5000);
+    }
+
+    private void init() {
+        mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        accelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        magnetometer = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+        textViewText = findViewById(R.id.textView);
+        timerText = findViewById(R.id.timer);
+        threeTwoOneText = findViewById(R.id.three_two_one_text);
+        promptText = findViewById(R.id.promptText);
+        correctOverlay = findViewById(R.id.correctOverlay);
+        timerText = findViewById(R.id.timer);
+        textViewText =  findViewById(R.id.textView);
+
+
+    }
+
+    private void soundInit() {
+        mpGreen = MediaPlayer.create(this, R.raw.green);
+        mpRed = MediaPlayer.create(this, R.raw.red);
+        mpNew = MediaPlayer.create(this, R.raw.newname);
+        mpTimeOut = MediaPlayer.create(this, R.raw.timeout);
+        mpTick = MediaPlayer.create(this, R.raw.tick);
+        mpStart = MediaPlayer.create(this, R.raw.start);
     }
 
     @Override
