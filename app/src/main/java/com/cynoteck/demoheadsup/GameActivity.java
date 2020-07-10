@@ -63,6 +63,11 @@ public class GameActivity extends FragmentActivity implements SensorEventListene
 
     }
 
+    private void sensorRegister() {
+        mSensorManager.registerListener(GameActivity.this, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);
+        mSensorManager.registerListener(GameActivity.this, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);
+    }
+
     private void gameAndPauseTime() {
         gamePauseTime = new CountDownTimer(total, 1000) {
             @Override
@@ -90,8 +95,6 @@ public class GameActivity extends FragmentActivity implements SensorEventListene
                 timerText.setVisibility(View.GONE);
             }
         };
-
-
         gameTime = new CountDownTimer(30000, 1000) {
             @Override
             public void onTick(long millisUntilFinished) {
@@ -126,23 +129,19 @@ public class GameActivity extends FragmentActivity implements SensorEventListene
     }
 
     private void firstCountDownStart() {
-
+        mSensorManager.unregisterListener(GameActivity.this);
         movie.addAll(Arrays.asList(names));
         Collections.shuffle(movie);
         presentStr = new String[]{movie.get(0)};
-
         Log.e("presentstr", String.valueOf(presentStr));
         movie.remove(0);
         textViewText.setText(presentStr[0]);
-        passOverlay = findViewById(R.id.passOverlay);
         promptText.setVisibility(View.VISIBLE);
         textViewText.setVisibility(View.GONE);
         timerText.setVisibility(View.GONE);
         threeTwoOneText.setVisibility(View.VISIBLE);
         skippedStrArr.clear();
         doneStrArr.clear();
-        mSensorManager.unregisterListener(GameActivity.this);
-
         new CountDownTimer(5000, 1000) {
             @Override
             public void onTick(long millisUntilFinished) {
@@ -152,11 +151,8 @@ public class GameActivity extends FragmentActivity implements SensorEventListene
 
             @Override
             public void onFinish() {
-                mSensorManager.registerListener(GameActivity.this, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);
-                mSensorManager.registerListener(GameActivity.this, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);
+                sensorRegister();
                 promptText.setVisibility(View.GONE);
-                mSensorManager.registerListener(GameActivity.this, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);
-                mSensorManager.registerListener(GameActivity.this, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);
                 mpStart.start();
                 threeTwoOneText.setText("Start!");
             }
@@ -181,6 +177,7 @@ public class GameActivity extends FragmentActivity implements SensorEventListene
         correctOverlay = findViewById(R.id.correctOverlay);
         timerText = findViewById(R.id.timer);
         textViewText =  findViewById(R.id.textView);
+        passOverlay = findViewById(R.id.passOverlay);
 
 
     }
