@@ -239,7 +239,6 @@ public class GameActivity extends FragmentActivity implements SensorEventListene
 
     private void startGame() {
         threeTwoOneText.setVisibility(View.GONE);
-//        exitButton.setVisibility(View.VISIBLE);
         textViewText.setVisibility(View.VISIBLE);
         timerText.setVisibility(View.VISIBLE);
         promptText.setVisibility(View.GONE);
