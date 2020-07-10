@@ -31,7 +31,6 @@ public class GameActivity extends FragmentActivity implements SensorEventListene
     MediaPlayer mpTick;
     MediaPlayer mpStart;
     View correctOverlay, passOverlay;
-
     Random randomInt = new Random();
     float[] mGravity;
     float[] mGeomagnetic;
@@ -39,14 +38,10 @@ public class GameActivity extends FragmentActivity implements SensorEventListene
     ArrayList<String> doneStrArr = new ArrayList();
     String[] presentStr = null;
     ArrayList<String> movie = new ArrayList();
-
-
-
     TextView timerText;
     TextView promptText, textViewText;
     TextView threeTwoOneText;
     private static long total;
-
     CountDownTimer gamePauseTime;
     CountDownTimer gameTime;
     @Override
@@ -85,7 +80,6 @@ public class GameActivity extends FragmentActivity implements SensorEventListene
 //                    resultIntent.putExtra("Correct", doneStrArr.size());
 //                    resultIntent.putExtra("SkippedStrings", skippedStrArr.toArray());
 //                    resultIntent.putExtra("CorrectStrings", doneStrArr.toArray());
-//                    mSensorManager.unregisterListener(mShakeDetector);
 //                    mContext.startActivity(resultIntent);
 //                    skippedStrArr.clear();
 //                    doneStrArr.clear();
