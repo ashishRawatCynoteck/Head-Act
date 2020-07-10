@@ -1,0 +1,23 @@
+<resources>
+    <string name="app_name">DemoHeadsUp</string>
+    <string-array name="movieName">
+        <item>Hera Pheri</item>
+        <item>Jannat</item>
+        <item>Goolmall</item>
+        <item>OMG</item>
+        <item>Dhoom 3</item>
+        <item>3 idiots</item>
+        <item>Bhool bulaiya</item>
+        <item>Bhahubali</item>
+        <item>Rebel</item>
+        <item>Mahabharat</item>
+        <item>Kites</item>
+        <item>Bang Bang</item>
+        <item>Ra-One</item>
+        <item>1920 evil returns</item>
+        <item>Jajantram Mamantarm</item>
+        <item>Hum Sat Sat Hai</item>
+        <item>Phir Hera Pheri</item>
+
+    </string-array>
+</resources>
