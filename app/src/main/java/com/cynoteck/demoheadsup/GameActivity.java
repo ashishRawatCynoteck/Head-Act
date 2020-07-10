@@ -58,7 +58,6 @@ public class GameActivity extends FragmentActivity implements SensorEventListene
         soundInit();
         gameAndPauseTime();
         init();
-        gameAndPauseTime();
         firstCountDownStart();
 
     }
