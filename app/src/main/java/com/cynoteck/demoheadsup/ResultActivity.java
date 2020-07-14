@@ -49,6 +49,7 @@ public class ResultActivity extends FragmentActivity {
     @Override
     public void onBackPressed() {
         super.onBackPressed();
-
+        Intent moveIntent = new Intent(ResultActivity.this,MainActivity.class);
+        startActivity(moveIntent);
     }
 }

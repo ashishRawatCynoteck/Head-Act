@@ -1,25 +1,53 @@
 package com.cynoteck.demoheadsup;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
+
+import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.hardware.Camera;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.media.CamcorderProfile;
 import android.media.MediaPlayer;
+import android.media.MediaRecorder;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Random;
 
+import static android.Manifest.permission.CAMERA;
+import static android.Manifest.permission.READ_EXTERNAL_STORAGE;
+import static android.Manifest.permission.RECORD_AUDIO;
+import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
+
 public class GameActivity extends FragmentActivity implements SensorEventListener {
+
+    private Camera mCamera;
+    private CameraPreview mPreview;
+    private MediaRecorder mediaRecorder;
+    private Button capture, switchCamera;
+    private Context myContext;
+    private LinearLayout cameraPreview;
+    private boolean cameraFront = false;
+    boolean recording = false;
+
+
     private SensorManager mSensorManager;
     private Sensor accelerometer;
     private Sensor magnetometer;
@@ -45,12 +73,24 @@ public class GameActivity extends FragmentActivity implements SensorEventListene
     private static long total;
     CountDownTimer gamePauseTime;
     CountDownTimer gameTime;
+    CountDownTimer fiveSecond;
+
+    private static final int STORAGE_PERMISSION_CODE = 101;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
         this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_game);
+        checkAllPermission();
+
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        myContext = this;
+        if (checkAllPermission()){
+            cameraInitialize();
+        }
+
         soundInit();
         gameAndPauseTime();
         init();
@@ -58,7 +98,80 @@ public class GameActivity extends FragmentActivity implements SensorEventListene
         firstCountDownStart();
 
     }
+    private boolean checkAllPermission() {
+            int result = ContextCompat.checkSelfPermission(getApplicationContext(), RECORD_AUDIO);
+            int result1 = ContextCompat.checkSelfPermission(getApplicationContext(), CAMERA);
+            int result2 = ContextCompat.checkSelfPermission(getApplicationContext(), READ_EXTERNAL_STORAGE);
+            int result3 = ContextCompat.checkSelfPermission(getApplicationContext(), WRITE_EXTERNAL_STORAGE);
 
+            return result == PackageManager.PERMISSION_GRANTED && result1 == PackageManager.PERMISSION_GRANTED &&result2 == PackageManager.PERMISSION_GRANTED &&result3 == PackageManager.PERMISSION_GRANTED;
+
+    }
+
+
+    @SuppressLint("UnsupportedChromeOsCameraSystemFeature")
+    private boolean hasCamera(Context context) {
+        // check if the device has camera
+        if (context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+    private void cameraInitialize() {
+        cameraPreview = (LinearLayout) findViewById(R.id.camera_preview);
+
+        mPreview = new CameraPreview(myContext, mCamera);
+        cameraPreview.addView(mPreview);
+
+
+
+    }
+    private void releaseMediaRecorder() {
+        if (mediaRecorder != null) {
+            mediaRecorder.reset(); // clear recorder configuration
+            mediaRecorder.release(); // release the recorder object
+            mediaRecorder = null;
+            mCamera.lock(); // lock camera for later use
+        }
+    }
+    private boolean prepareMediaRecorder() {
+
+        mediaRecorder = new MediaRecorder();
+
+        mCamera.unlock();
+        mediaRecorder.setCamera(mCamera);
+
+        mediaRecorder.setAudioSource(MediaRecorder.AudioSource.CAMCORDER);
+        mediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
+
+        mediaRecorder.setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_480P));
+
+        mediaRecorder.setOutputFile("/sdcard/myvideo.mp4");
+        mediaRecorder.setMaxDuration(600000); // Set max duration 60 sec.
+        mediaRecorder.setMaxFileSize(50000000); // Set max file size 50M
+
+        try {
+            mediaRecorder.prepare();
+        } catch (IllegalStateException e) {
+            releaseMediaRecorder();
+            return false;
+        } catch (IOException e) {
+            releaseMediaRecorder();
+            return false;
+        }
+        return true;
+
+    }
+
+
+    private void releaseCamera() {
+        // stop and release camera
+        if (mCamera != null) {
+            mCamera.release();
+            mCamera = null;
+        }
+    }
     private void sensorRegister() {
         mSensorManager.registerListener(GameActivity.this, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);
         mSensorManager.registerListener(GameActivity.this, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);
@@ -74,6 +187,7 @@ public class GameActivity extends FragmentActivity implements SensorEventListene
 
             @Override
             public void onFinish() {
+
                 textViewText.setText("Time Over!");
                 textViewText.postDelayed(new Runnable() {
                     @Override
@@ -99,6 +213,9 @@ public class GameActivity extends FragmentActivity implements SensorEventListene
 
             @Override
             public void onFinish() {
+                if (checkAllPermission()){
+                    startStopSaveCamera();
+                }
                 mSensorManager.unregisterListener(GameActivity.this);
                 textViewText.setText("Time Over!");
                 mpTimeOut.start();
@@ -121,6 +238,8 @@ public class GameActivity extends FragmentActivity implements SensorEventListene
                 timerText.setVisibility(View.GONE);
             }
         };
+
+
     }
 
     private void firstCountDownStart() {
@@ -146,13 +265,14 @@ public class GameActivity extends FragmentActivity implements SensorEventListene
 
             @Override
             public void onFinish() {
+                if (checkAllPermission()){
+                    startStopSaveCamera();}
                 sensorRegister();
                 promptText.setVisibility(View.GONE);
                 mpStart.start();
                 threeTwoOneText.setText("Start!");
             }
         }.start();
-
         textViewText.postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -195,7 +315,9 @@ public class GameActivity extends FragmentActivity implements SensorEventListene
             float x = event.values[0];
             float y = event.values[1];
             float z = event.values[2];
-
+            Log.e("XXXXXXX", x+ "");
+            Log.e("YYYYYYY", y+ "");
+            Log.e("ZZZZZZZ", z+ "");
 
             if ((z > 1) && (z < 9) && (x > 0 && x < 3) && (y > -3 && y < 3))
             {
@@ -206,17 +328,17 @@ public class GameActivity extends FragmentActivity implements SensorEventListene
                 if ((z > 1) && (z < 9) && (x > 0 && x < 9) && (y > -3 && y < 3)) {
                     mSensorManager.unregisterListener(this);
 //                    Toast.makeText(this, "Upward", Toast.LENGTH_SHORT).show();
-                textViewText.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        sensorRegister();
-                        presentStr[0] = movie.get(randomInt.nextInt(movie.size()));
-                        passOverlay.setVisibility(View.GONE);
-                        textViewText.setText(presentStr[0]);
-                        mpNew.start();
+                    textViewText.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            sensorRegister();
+                            presentStr[0] = movie.get(randomInt.nextInt(movie.size()));
+                            passOverlay.setVisibility(View.GONE);
+                            textViewText.setText(presentStr[0]);
+                            mpNew.start();
 
-                    }
-                }, 1000);
+                        }
+                    }, 1000);
                 }
 
 
@@ -226,43 +348,70 @@ public class GameActivity extends FragmentActivity implements SensorEventListene
                 correctOverlay.setVisibility(View.VISIBLE);
 
 //                    Toast.makeText(this, "Downward", Toast.LENGTH_SHORT).show();
-                    if ((z > -9) && (z < 1) && (x > 0 && x < 9) && (y > -3 && y < 3)) {
+                if ((z > -9) && (z < 1) && (x > 0 && x < 9) && (y > -3 && y < 3)) {
 //                        Toast.makeText(this, "Center", Toast.LENGTH_SHORT).show();
-                        mSensorManager.unregisterListener(this);
-                        Log.e("XXXXXXX", x+ "");
-                        Log.e("YYYYYYY", y+ "");
-                        Log.e("ZZZZZZZ", z+ "");
-                        Collections.shuffle(movie);
-                        presentStr[0] = movie.get(0).toString();
-                        doneStrArr.add(presentStr[0]);
-                        Log.e("done", presentStr[0]);
-                        movie.remove(0);
-                        textViewText.postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                sensorRegister();
-                                correctOverlay.setVisibility(View.GONE);
-                                textViewText.setText(presentStr[0]);
-                                mpNew.start();
-                            }
-                        }, 1000);
-                    }
+                    mSensorManager.unregisterListener(this);
 
-
+                    Collections.shuffle(movie);
+                    presentStr[0] = movie.get(0).toString();
+                    doneStrArr.add(textViewText.getText().toString());
+                    Log.e("done", presentStr[0]);
+                    movie.remove(0);
+                    textViewText.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            sensorRegister();
+                            correctOverlay.setVisibility(View.GONE);
+                            textViewText.setText(presentStr[0]);
+                            mpNew.start();
+                        }
+                    }, 1000);
                 }
+
+
             }
-
-
         }
 
 
+    }
+
 
     private void startGame() {
+
         threeTwoOneText.setVisibility(View.GONE);
         textViewText.setVisibility(View.VISIBLE);
         timerText.setVisibility(View.VISIBLE);
         promptText.setVisibility(View.GONE);
         gameTime.start();
+    }
+
+    private void startStopSaveCamera() {
+        if (recording) {
+            // stop recording and release camera
+            mediaRecorder.stop(); // stop the recording
+            releaseMediaRecorder(); // release the MediaRecorder object
+            Toast.makeText(GameActivity.this, "Video captured!", Toast.LENGTH_LONG).show();
+            recording = false;
+        } else {
+            if (!prepareMediaRecorder()) {
+                Toast.makeText(GameActivity.this, "Fail in prepareMediaRecorder()!\n - Ended -", Toast.LENGTH_LONG).show();
+                finish();
+            }
+            // work on UiThread for better performance
+            runOnUiThread(new Runnable() {
+                public void run() {
+                    // If there are stories, add them to the table
+
+                    try {
+                        mediaRecorder.start();
+                    } catch (final Exception ex) {
+                        // Log.i("---","Exception in thread");
+                    }
+                }
+            });
+
+            recording = true;
+        }
     }
 
     @Override
@@ -274,11 +423,40 @@ public class GameActivity extends FragmentActivity implements SensorEventListene
         mSensorManager.unregisterListener(this);
         super.onDestroy();
     }
-    @Override
-    public void onBackPressed()
-    {
-        mSensorManager.unregisterListener(this);
-        super.onBackPressed();
+
+
+    private int findBackFacingCamera() {
+        int cameraId = -1;
+        // Search for the back facing camera
+        // get the number of cameras
+        int numberOfCameras = Camera.getNumberOfCameras();
+        // for every camera check
+        for (int i = 0; i < numberOfCameras; i++) {
+            Camera.CameraInfo info = new Camera.CameraInfo();
+            Camera.getCameraInfo(i, info);
+            if (info.facing == Camera.CameraInfo.CAMERA_FACING_BACK) {
+                cameraId = i;
+                cameraFront = false;
+                break;
+            }
+        }
+        return cameraId;
+    }
+
+    private int findFrontFacingCamera() {
+        int cameraId = -1;
+        // Search for the front facing camera
+        int numberOfCameras = Camera.getNumberOfCameras();
+        for (int i = 0; i < numberOfCameras; i++) {
+            Camera.CameraInfo info = new Camera.CameraInfo();
+            Camera.getCameraInfo(i, info);
+            if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+                cameraId = i;
+                cameraFront = true;
+                break;
+            }
+        }
+        return cameraId;
     }
     @Override
     public void onResume()
@@ -286,11 +464,50 @@ public class GameActivity extends FragmentActivity implements SensorEventListene
         getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
         this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         super.onResume();
+
+        if (checkAllPermission()){
+            if (!hasCamera(myContext)) {
+                Toast toast = Toast.makeText(myContext, "Sorry, your phone does not have a camera!", Toast.LENGTH_LONG);
+                toast.show();
+                finish();
+            }
+            if (mCamera == null) {
+                // if the front facing camera does not exist
+                if (findBackFacingCamera() < 0) {
+                    Toast.makeText(this, "No front facing camera found.", Toast.LENGTH_LONG).show();
+                    switchCamera.setVisibility(View.GONE);
+                }
+                mCamera = Camera.open(findFrontFacingCamera());
+                mPreview.refreshCamera(mCamera);
+            }
+        }
+
+
     }
     @Override
     protected void onPause()
     {
-        mSensorManager.unregisterListener(this);
+       onBackPressed();
         super.onPause();
+
+    }
+
+    @Override
+    protected void onStop() {
+       onBackPressed();
+        super.onStop();
+
+    }
+
+    @Override
+    public void onBackPressed()
+    {
+        onGamePause();
+        super.onBackPressed();
+    }
+    protected void onGamePause() {
+        mSensorManager.unregisterListener(this);
+        gameTime.cancel();
+        gamePauseTime.cancel();
     }
 }

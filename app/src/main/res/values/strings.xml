@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">DemoHeadsUp</string>
+    <string name="app_name">HeadAct</string>
     <string-array name="movieName">
         <item>Hera Pheri</item>
         <item>Jannat</item>
