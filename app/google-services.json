@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "986918691914",
+    "firebase_url": "https://headact-9887c.firebaseio.com",
+    "project_id": "headact-9887c",
+    "storage_bucket": "headact-9887c.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:986918691914:android:2b3a3513f518bdaebb72b3",
+        "android_client_info": {
+          "package_name": "com.cynoteck.HeadAct"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "986918691914-ugkkmpmh3ivv0p6r324ir64n2r0b3t3v.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.cynoteck.HeadAct",
+            "certificate_hash": "4cea8d27b022077b4d15e8161db8a70d31186a81"
+          }
+        },
+        {
+          "client_id": "986918691914-qom33f3dnsvi52fgguk7hpca7jhfsar6.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyABbIny-n2DpLnoHOtgFKkFap8lZk543p0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "986918691914-qom33f3dnsvi52fgguk7hpca7jhfsar6.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,6 +1,5 @@
-package com.cynoteck.demoheadsup;
+package com.cynoteck.HeadAct;
 
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.FragmentActivity;
 
 import android.content.Intent;
@@ -10,6 +9,7 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
+
 
 import java.util.ArrayList;
 

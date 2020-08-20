@@ -1,4 +1,4 @@
-package com.cynoteck.demoheadsup;
+package com.cynoteck.HeadAct;
 
 import android.app.Activity;
 import android.content.Context;

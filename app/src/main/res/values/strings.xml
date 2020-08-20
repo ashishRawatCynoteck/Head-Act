@@ -1,5 +1,8 @@
 <resources>
     <string name="app_name">HeadAct</string>
+    <string name="scrrem1"><![CDATA[Stand infront of your friend & hold\n your phone infront of you in land-\nscape mode with the screen towards\n your friend\n Your friend will act as per written on\n the screen you have to guess what\n your friend acting.]]></string>
+    <string name="scrrem2">If you guess it correctly flip your\n phone downwards.</string>
+    <string name="screen3"><![CDATA[If you don\'t know & want to pass flip\n it upwards.]]></string>
     <string-array name="movieName">
         <item>Hera Pheri</item>
         <item>Jannat</item>

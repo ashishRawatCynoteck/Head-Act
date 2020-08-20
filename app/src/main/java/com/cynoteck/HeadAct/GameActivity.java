@@ -1,8 +1,9 @@
-package com.cynoteck.demoheadsup;
+package com.cynoteck.HeadAct;
+import androidx.annotation.RequiresApi;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
 
-import android.annotation.SuppressLint;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -14,40 +15,49 @@ import android.hardware.SensorManager;
 import android.media.CamcorderProfile;
 import android.media.MediaPlayer;
 import android.media.MediaRecorder;
+import android.media.MediaScannerConnection;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.util.Log;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
-import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+
+import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.Random;
 
 import static android.Manifest.permission.CAMERA;
 import static android.Manifest.permission.READ_EXTERNAL_STORAGE;
 import static android.Manifest.permission.RECORD_AUDIO;
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
+import static android.provider.MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO;
 
-public class GameActivity extends FragmentActivity implements SensorEventListener {
-
-    private Camera mCamera;
+public class GameActivity extends FragmentActivity implements SensorEventListener, SurfaceHolder.Callback {
+    boolean isRecording = false;
+    private Camera camera;
     private CameraPreview mPreview;
     private MediaRecorder mediaRecorder;
     private Button capture, switchCamera;
     private Context myContext;
-    private LinearLayout cameraPreview;
     private boolean cameraFront = false;
+    private SurfaceView surfaceView;
+    SurfaceHolder surfaceHolder;
     boolean recording = false;
-
-
     private SensorManager mSensorManager;
     private Sensor accelerometer;
     private Sensor magnetometer;
@@ -74,7 +84,6 @@ public class GameActivity extends FragmentActivity implements SensorEventListene
     CountDownTimer gamePauseTime;
     CountDownTimer gameTime;
     CountDownTimer fiveSecond;
-
     private static final int STORAGE_PERMISSION_CODE = 101;
 
     @Override
@@ -108,7 +117,7 @@ public class GameActivity extends FragmentActivity implements SensorEventListene
 
     }
 
-
+/*
     @SuppressLint("UnsupportedChromeOsCameraSystemFeature")
     private boolean hasCamera(Context context) {
         // check if the device has camera
@@ -117,60 +126,83 @@ public class GameActivity extends FragmentActivity implements SensorEventListene
         } else {
             return false;
         }
-    }
+    }*/
     private void cameraInitialize() {
-        cameraPreview = (LinearLayout) findViewById(R.id.camera_preview);
-
-        mPreview = new CameraPreview(myContext, mCamera);
-        cameraPreview.addView(mPreview);
+        surfaceView = findViewById(R.id.sufaceView);
+        surfaceHolder = surfaceView.getHolder();
+        surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+        surfaceHolder.addCallback( this);
 
 
 
     }
-    private void releaseMediaRecorder() {
+/*    private void releaseMediaRecorder() {
         if (mediaRecorder != null) {
             mediaRecorder.reset(); // clear recorder configuration
             mediaRecorder.release(); // release the recorder object
             mediaRecorder = null;
             mCamera.lock(); // lock camera for later use
         }
+    }*/
+@RequiresApi(api = Build.VERSION_CODES.O)
+private boolean prepareForVedioRecording(){
+    camera.unlock();
+
+    mediaRecorder = new MediaRecorder();
+    mediaRecorder.setCamera(camera);
+    mediaRecorder.setAudioSource(MediaRecorder.AudioSource.CAMCORDER);
+    mediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
+    mediaRecorder.setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_1080P));
+    mediaRecorder.setOutputFile(getOutputFile(MEDIA_TYPE_VIDEO));
+
+    mediaRecorder.setPreviewDisplay(surfaceHolder.getSurface());
+    mediaRecorder.setVideoSize(1920,1080);
+
+    try {
+        mediaRecorder.prepare();
+    } catch (IOException e) {
+        e.printStackTrace();
+        releaseMediaRecorder();
+        return false;
     }
-    private boolean prepareMediaRecorder() {
+    return true;
 
-        mediaRecorder = new MediaRecorder();
+}
 
-        mCamera.unlock();
-        mediaRecorder.setCamera(mCamera);
-
-        mediaRecorder.setAudioSource(MediaRecorder.AudioSource.CAMCORDER);
-        mediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
-
-        mediaRecorder.setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_480P));
-
-        mediaRecorder.setOutputFile("/sdcard/myvideo.mp4");
-        mediaRecorder.setMaxDuration(600000); // Set max duration 60 sec.
-        mediaRecorder.setMaxFileSize(50000000); // Set max file size 50M
-
-        try {
-            mediaRecorder.prepare();
-        } catch (IllegalStateException e) {
-            releaseMediaRecorder();
-            return false;
-        } catch (IOException e) {
-            releaseMediaRecorder();
-            return false;
+    private void releaseMediaRecorder() {
+        if (mediaRecorder!=null){
+            mediaRecorder.reset();
+            mediaRecorder.release();
+            mediaRecorder=null;
+            camera.lock();
         }
-        return true;
-
+    }
+    private String currentTimeStamp(){
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyMMdd_HH_mm_ss");
+        String currentTime = simpleDateFormat.format(new Date());
+        return  currentTime;
     }
 
+    private File getOutputFile(int mediaTypeVideo) {
 
-    private void releaseCamera() {
-        // stop and release camera
-        if (mCamera != null) {
-            mCamera.release();
-            mCamera = null;
-        }
+        File dir = (Environment.getExternalStorageDirectory());
+        String timeStamp = currentTimeStamp();
+
+        if (mediaTypeVideo==MEDIA_TYPE_VIDEO){
+            File  filepath = new File(dir.getPath() + File.separator + "VID"+timeStamp+".mp4");
+/*
+            ContentValues values = new ContentValues();
+*/
+            MediaScannerConnection.scanFile(this, new String[] { filepath.getPath() }, new String[] { "video/mp4" }, null);
+           /* values.put(MediaStore.Images.Media.DATE_TAKEN, System.currentTimeMillis());
+            values.put(MediaStore.Images.Media.MIME_TYPE, "video/mp4");
+            values.put(MediaStore.MediaColumns.DATA,filepath.toString());
+            getApplication().getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);*/
+            Log.e("fileee", filepath.toString());
+            return filepath;
+
+        }else {return null;}
+
     }
     private void sensorRegister() {
         mSensorManager.registerListener(GameActivity.this, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);
@@ -211,10 +243,22 @@ public class GameActivity extends FragmentActivity implements SensorEventListene
                 timerText.setText(millisUntilFinished / 1000 + "");
             }
 
+            @RequiresApi(api = Build.VERSION_CODES.O)
             @Override
             public void onFinish() {
                 if (checkAllPermission()){
-                    startStopSaveCamera();
+                    if (isRecording){
+                        mediaRecorder.stop();
+                        releaseMediaRecorder();
+                        camera.lock();
+                        isRecording = false;
+                        Toast.makeText(GameActivity.this, "Done", Toast.LENGTH_LONG).show();
+                    }else {
+                        if (prepareForVedioRecording()){
+                            mediaRecorder.start();
+                            isRecording = true;
+                        }
+                    }
                 }
                 mSensorManager.unregisterListener(GameActivity.this);
                 textViewText.setText("Time Over!");
@@ -247,7 +291,6 @@ public class GameActivity extends FragmentActivity implements SensorEventListene
         movie.addAll(Arrays.asList(names));
         Collections.shuffle(movie);
         presentStr = new String[]{movie.get(0)};
-        Log.e("presentstr", String.valueOf(presentStr));
         movie.remove(0);
         textViewText.setText(presentStr[0]);
         promptText.setVisibility(View.VISIBLE);
@@ -256,17 +299,30 @@ public class GameActivity extends FragmentActivity implements SensorEventListene
         threeTwoOneText.setVisibility(View.VISIBLE);
         skippedStrArr.clear();
         doneStrArr.clear();
-        new CountDownTimer(5000, 1000) {
+        fiveSecond = new CountDownTimer(5000, 1000) {
             @Override
             public void onTick(long millisUntilFinished) {
                 mpTick.start();
                 threeTwoOneText.setText(String.valueOf(millisUntilFinished / 1000));
             }
 
+            @RequiresApi(api = Build.VERSION_CODES.O)
             @Override
             public void onFinish() {
                 if (checkAllPermission()){
-                    startStopSaveCamera();}
+                    if (isRecording){
+                        mediaRecorder.stop();
+                        releaseMediaRecorder();
+                        camera.lock();
+                        isRecording = false;
+                        Toast.makeText(GameActivity.this, "Done", Toast.LENGTH_LONG).show();
+                    }else {
+                        if (prepareForVedioRecording()){
+                            mediaRecorder.start();
+                            isRecording = true;
+                        }
+                    }
+                }
                 sensorRegister();
                 promptText.setVisibility(View.GONE);
                 mpStart.start();
@@ -315,9 +371,9 @@ public class GameActivity extends FragmentActivity implements SensorEventListene
             float x = event.values[0];
             float y = event.values[1];
             float z = event.values[2];
-            Log.e("XXXXXXX", x+ "");
-            Log.e("YYYYYYY", y+ "");
-            Log.e("ZZZZZZZ", z+ "");
+//            Log.e("XXXXXXX", x+ "");
+//            Log.e("YYYYYYY", y+ "");
+//            Log.e("ZZZZZZZ", z+ "");
 
             if ((z > 1) && (z < 9) && (x > 0 && x < 3) && (y > -3 && y < 3))
             {
@@ -327,7 +383,6 @@ public class GameActivity extends FragmentActivity implements SensorEventListene
                 passOverlay.setVisibility(View.VISIBLE);
                 if ((z > 1) && (z < 9) && (x > 0 && x < 9) && (y > -3 && y < 3)) {
                     mSensorManager.unregisterListener(this);
-//                    Toast.makeText(this, "Upward", Toast.LENGTH_SHORT).show();
                     textViewText.postDelayed(new Runnable() {
                         @Override
                         public void run() {
@@ -347,9 +402,7 @@ public class GameActivity extends FragmentActivity implements SensorEventListene
                 mpGreen.start();
                 correctOverlay.setVisibility(View.VISIBLE);
 
-//                    Toast.makeText(this, "Downward", Toast.LENGTH_SHORT).show();
                 if ((z > -9) && (z < 1) && (x > 0 && x < 9) && (y > -3 && y < 3)) {
-//                        Toast.makeText(this, "Center", Toast.LENGTH_SHORT).show();
                     mSensorManager.unregisterListener(this);
 
                     Collections.shuffle(movie);
@@ -385,35 +438,6 @@ public class GameActivity extends FragmentActivity implements SensorEventListene
         gameTime.start();
     }
 
-    private void startStopSaveCamera() {
-        if (recording) {
-            // stop recording and release camera
-            mediaRecorder.stop(); // stop the recording
-            releaseMediaRecorder(); // release the MediaRecorder object
-            Toast.makeText(GameActivity.this, "Video captured!", Toast.LENGTH_LONG).show();
-            recording = false;
-        } else {
-            if (!prepareMediaRecorder()) {
-                Toast.makeText(GameActivity.this, "Fail in prepareMediaRecorder()!\n - Ended -", Toast.LENGTH_LONG).show();
-                finish();
-            }
-            // work on UiThread for better performance
-            runOnUiThread(new Runnable() {
-                public void run() {
-                    // If there are stories, add them to the table
-
-                    try {
-                        mediaRecorder.start();
-                    } catch (final Exception ex) {
-                        // Log.i("---","Exception in thread");
-                    }
-                }
-            });
-
-            recording = true;
-        }
-    }
-
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
     }
@@ -422,25 +446,6 @@ public class GameActivity extends FragmentActivity implements SensorEventListene
     {
         mSensorManager.unregisterListener(this);
         super.onDestroy();
-    }
-
-
-    private int findBackFacingCamera() {
-        int cameraId = -1;
-        // Search for the back facing camera
-        // get the number of cameras
-        int numberOfCameras = Camera.getNumberOfCameras();
-        // for every camera check
-        for (int i = 0; i < numberOfCameras; i++) {
-            Camera.CameraInfo info = new Camera.CameraInfo();
-            Camera.getCameraInfo(i, info);
-            if (info.facing == Camera.CameraInfo.CAMERA_FACING_BACK) {
-                cameraId = i;
-                cameraFront = false;
-                break;
-            }
-        }
-        return cameraId;
     }
 
     private int findFrontFacingCamera() {
@@ -464,23 +469,6 @@ public class GameActivity extends FragmentActivity implements SensorEventListene
         getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
         this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         super.onResume();
-
-        if (checkAllPermission()){
-            if (!hasCamera(myContext)) {
-                Toast toast = Toast.makeText(myContext, "Sorry, your phone does not have a camera!", Toast.LENGTH_LONG);
-                toast.show();
-                finish();
-            }
-            if (mCamera == null) {
-                // if the front facing camera does not exist
-                if (findBackFacingCamera() < 0) {
-                    Toast.makeText(this, "No front facing camera found.", Toast.LENGTH_LONG).show();
-                    switchCamera.setVisibility(View.GONE);
-                }
-                mCamera = Camera.open(findFrontFacingCamera());
-                mPreview.refreshCamera(mCamera);
-            }
-        }
 
 
     }
@@ -507,7 +495,39 @@ public class GameActivity extends FragmentActivity implements SensorEventListene
     }
     protected void onGamePause() {
         mSensorManager.unregisterListener(this);
+        fiveSecond.cancel();
         gameTime.cancel();
         gamePauseTime.cancel();
+    }
+
+    @Override
+    public void surfaceCreated(SurfaceHolder holder) {
+        try {
+            camera = Camera.open(findFrontFacingCamera());
+        }catch (Exception e){
+
+        }Camera.Parameters parameters;
+
+        parameters = camera.getParameters();
+        parameters.setPreviewSize(352,288);
+        parameters.setPreviewFrameRate(20);
+        camera.setParameters(parameters);
+
+        try {
+            camera.setPreviewDisplay(surfaceHolder);
+            camera.startPreview();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+
+    }
+
+    @Override
+    public void surfaceDestroyed(SurfaceHolder holder) {
+
     }
 }

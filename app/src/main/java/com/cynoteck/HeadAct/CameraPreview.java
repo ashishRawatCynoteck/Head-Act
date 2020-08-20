@@ -1,4 +1,4 @@
-package com.cynoteck.demoheadsup;
+package com.cynoteck.HeadAct;
 
 import android.content.Context;
 import android.hardware.Camera;
