@@ -23,4 +23,6 @@
         <item>Phir Hera Pheri</item>
 
     </string-array>
+    <string name="app_id"> ca-app-pub-2823662566409957~7898918857</string>
+    <string name="inter_ads_unit_Id">ca-app-pub-2823662566409957/1333510503</string>
 </resources>

@@ -32,6 +32,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 
+import com.google.android.gms.ads.AdListener;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.InterstitialAd;
+
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -61,7 +65,7 @@ public class GameActivity extends FragmentActivity implements SensorEventListene
     private SensorManager mSensorManager;
     private Sensor accelerometer;
     private Sensor magnetometer;
-    String names[] = {"Hera Pheri","Jannat", "Goolmall","OMG","Dhoom 3","3 idiots","Bhool bulaiya","Bhahubali","Rebel","Mahabharat","Kites","Bang Bang","Ra-One","1920 evil returns","Jajantram Mamantarm","Dream Girl","Saaho","Batla House","Mission Mangal","War","De De Pyaar De","Kabir Singh","The Tashkent Files","Super 30","Gully Boy","Total Dhamaal","Badla","Kesari","Uri: The Surgical Strike","Thackeray","Manikarnika: The Queen Of Jhansi"};
+    String names[] = {"Paap Ko Jalakar Rakh Kar Dunga","Jal Bin Machhli Nritya Bin Bijli","Bandook Dahej Ke Seenay Par","Andheri Raat Mein Diya Tere Haath Mein","Dhoti Lota Aur Chowpatty","Allah Meharban To Gadha Pehalwan","Arvind Desai Ki Ajeeb Dastaan","Albert Pinto Ko Gussa Kyoon Aata Hai","Matru Ki Bijlee Ka Mandola","Luv Shuv Tey Chicken Khurana","Jajantaram Mamantaram","Stanley Ka Dabba","Basanti Ki Shadi Honeymoon Gabbar Ka ","Laali Ki Shaadi Mein Laddoo Deewana","The Playboy Mr. Sawhney ","Do Ladke Dono Kadke","Badhti Ka Naam Dadhi","Kaashi in Search of Ganga","Paharganj: The Little Amsterdam Of India","Majaz Ae Ghan-E-Dil Kya Karun","Chhota Bheem And The Throne of Bali","Murde Ki Jaan Khatre Mein","Salim Langde Pe Mat Ro","Howrah Bridge Pe Latki Laash","Bhediyon Ka Samooh","Hullabaloo Over Georgie and Bonnie’s Pictures","Saanch Ko Aanch Nahin ","Pappu Ki Pugdandi","Uttejana – The Fire","Kesar Kasturi","Chinar Daastan-E-Ishq ","Antarpravaah ","Chhappalled ","Phillauri ","Days of Tafree","Avgat ","Marudhar Express","Ganga Maang Rahi Balidan","Aaj Ka M.L.A. Ram Avtar","Aranyaka ","Putlibai ","Antarnaad ","Aarop","","Hera Pheri","Jannat", "Golmaal","Udaan","Dhoom 3","3 idiots","Bhool Bulaiya","Bhahubali","Rebel","Mahabharat","Kites","Bang Bang","Ra-One","1920 evil returns","Jajantram Mamantarm","Dream Girl","Saaho","Batla House","Mission Mangal","War","De De Pyaar De","Kabir Singh","The Tashkent Files","Super 30","Gully Boy","Total Dhamaal","Badla","Kesari","Uri: The Surgical Strike","Thackeray","Manikarnika: The Queen Of Jhansi","Band Baaja Baaraat","Ishqiya","Zindagi Na Milegi Dobara","Rockstar","Delhi Belly","Barfi!","Kahaani","Gangs of Wasseypur ","Vicky Donor","English Vinglish","Lootera","The Lunchbox","Highway","Queen","Haider","Piku","NH10","Masaan","Aligarh","Kapoor & Sons","Nil Battey Sannata","Udta Punjab","A Death in the Gunj","Newton","Andhadhun","October","Gully Boy","Article 15","Mard Ko Dard Nahi Hota","Dangal","Mukti Bhawan","Badhaai Ho","Ankhon Dekhi","Titli","Tumbbad","Ship of Theseus","Dil Dhadakne Do","Go Goa Gone","Dhobi Ghat","Raazi","Dilwale Dulhania Le Jayenge","Pyaasa","Insaf Ka Tarazu","Love Aaj Kal","Veer-Zaara","Mrs. Serial Killer","Fanaa","Panga ","Mother India","Dil Chahta Hai","Lagaan ","Sholay ","Jab We Met ","Lust Stories","Jodhaa Akbar","Mary Kom","Haider ","Kabhi Khushi Kabhie Gham","Khoobsurat ","Ek Tha Tiger","Devdas ","Hichki"," Main Prem Ki Diwani Hoon","Neerja ","Bajirao Mastani","Ek Ladki Ko Dekha Toh Aisa Laga","Bodyguard ","The White Tiger","The Dirty Picture","Is Love Enough? Sir","Saina ","Thapped "};
     public Intent resultIntent;
     MediaPlayer mpNew;
     MediaPlayer mpRed;
@@ -85,6 +89,7 @@ public class GameActivity extends FragmentActivity implements SensorEventListene
     CountDownTimer gameTime;
     CountDownTimer fiveSecond;
     private static final int STORAGE_PERMISSION_CODE = 101;
+    InterstitialAd mInterstitialAd;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -105,8 +110,17 @@ public class GameActivity extends FragmentActivity implements SensorEventListene
         init();
 //        sensorRegister();
         firstCountDownStart();
+        interStitialAd();
 
     }
+
+    private void interStitialAd() {
+        mInterstitialAd = new InterstitialAd(this);
+        mInterstitialAd.setAdUnitId(getResources().getString(R.string.inter_ads_unit_Id));
+        mInterstitialAd.loadAd(new AdRequest.Builder().build());
+
+    }
+
     private boolean checkAllPermission() {
             int result = ContextCompat.checkSelfPermission(getApplicationContext(), RECORD_AUDIO);
             int result1 = ContextCompat.checkSelfPermission(getApplicationContext(), CAMERA);
@@ -236,7 +250,7 @@ private boolean prepareForVedioRecording(){
                 timerText.setVisibility(View.GONE);
             }
         };
-        gameTime = new CountDownTimer(30000, 1000) {
+        gameTime = new CountDownTimer(60000, 1000) {
             @Override
             public void onTick(long millisUntilFinished) {
                 total = millisUntilFinished;
@@ -246,13 +260,14 @@ private boolean prepareForVedioRecording(){
             @RequiresApi(api = Build.VERSION_CODES.O)
             @Override
             public void onFinish() {
+
                 if (checkAllPermission()){
                     if (isRecording){
                         mediaRecorder.stop();
                         releaseMediaRecorder();
                         camera.lock();
                         isRecording = false;
-                        Toast.makeText(GameActivity.this, "Done", Toast.LENGTH_LONG).show();
+                        Toast.makeText(GameActivity.this, "Game Over !", Toast.LENGTH_LONG).show();
                     }else {
                         if (prepareForVedioRecording()){
                             mediaRecorder.start();
@@ -262,31 +277,65 @@ private boolean prepareForVedioRecording(){
                 }
                 mSensorManager.unregisterListener(GameActivity.this);
                 textViewText.setText("Time Over!");
-                mpTimeOut.start();
-                textViewText.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        resultIntent = new Intent(GameActivity.this, ResultActivity.class);
-                        resultIntent.putExtra("SkippedArrSize", skippedStrArr.size());
-                        resultIntent.putExtra("CorrectArrSize", doneStrArr.size());
-                        resultIntent.putExtra("SkippedStrings", skippedStrArr.toArray());
-                        resultIntent.putExtra("CorrectStrings", doneStrArr);
-                        Log.e("CorrectStrings",doneStrArr.toString());
-                        Log.e("SkippedArrSize",skippedStrArr.toString());
+                if (mInterstitialAd.isLoaded()) {
+                    mInterstitialAd.show();
+                    mInterstitialAd.setAdListener(new AdListener() {
+                        public void onAdLoaded() {
 
-                        startActivity(resultIntent);
-//                    skippedStrArr.clear();
-//                    doneStrArr.clear();
-                    }
-                }, 1500);
+                        }
+                        @Override
+                        public void onAdClosed() {
+
+                            resultIntent = new Intent(GameActivity.this, ResultActivity.class);
+                            resultIntent.putExtra("SkippedArrSize", skippedStrArr.size());
+                            resultIntent.putExtra("CorrectArrSize", doneStrArr.size());
+                            resultIntent.putExtra("SkippedStrings", skippedStrArr.toArray());
+                            resultIntent.putExtra("CorrectStrings", doneStrArr);
+                            Log.e("CorrectStrings",doneStrArr.toString());
+                            Log.e("SkippedArrSize",skippedStrArr.toString());
+
+                            startActivity(resultIntent);
+
+                        }
+                    });
+                }else {
+                    mInterstitialAd.loadAd(new AdRequest.Builder().build());
+                    resultIntent = new Intent(GameActivity.this, ResultActivity.class);
+                    resultIntent.putExtra("SkippedArrSize", skippedStrArr.size());
+                    resultIntent.putExtra("CorrectArrSize", doneStrArr.size());
+                    resultIntent.putExtra("SkippedStrings", skippedStrArr.toArray());
+                    resultIntent.putExtra("CorrectStrings", doneStrArr);
+                    Log.e("CorrectStrings",doneStrArr.toString());
+                    Log.e("SkippedArrSize",skippedStrArr.toString());
+
+                    startActivity(resultIntent);
+                }
+                mpTimeOut.start();
+
                 timerText.setVisibility(View.GONE);
-            }
+            }// textViewText.postDelayed(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        resultIntent = new Intent(GameActivity.this, ResultActivity.class);
+//                        resultIntent.putExtra("SkippedArrSize", skippedStrArr.size());
+//                        resultIntent.putExtra("CorrectArrSize", doneStrArr.size());
+//                        resultIntent.putExtra("SkippedStrings", skippedStrArr.toArray());
+//                        resultIntent.putExtra("CorrectStrings", doneStrArr);
+//                        Log.e("CorrectStrings",doneStrArr.toString());
+//                        Log.e("SkippedArrSize",skippedStrArr.toString());
+//
+//                        startActivity(resultIntent);
+////                    skippedStrArr.clear();
+////                    doneStrArr.clear();
+//                    }
+//                }, 1500);
         };
 
 
     }
 
     private void firstCountDownStart() {
+        Log.e("Size",Arrays.asList(names).size()+"");
         mSensorManager.unregisterListener(GameActivity.this);
         movie.addAll(Arrays.asList(names));
         Collections.shuffle(movie);
@@ -315,7 +364,6 @@ private boolean prepareForVedioRecording(){
                         releaseMediaRecorder();
                         camera.lock();
                         isRecording = false;
-                        Toast.makeText(GameActivity.this, "Done", Toast.LENGTH_LONG).show();
                     }else {
                         if (prepareForVedioRecording()){
                             mediaRecorder.start();
